@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ČD Zaměstnanci - Portál strojvůdců</title>
+  
+  <!-- Favikona s ikonou ČD -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230088CC'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFFFFF' font-family='sans-serif' font-weight='bold' font-size='30'%3EČD%3C/text%3E%3C/svg%3E">
+
+  <style>
+    :root {
+      --cd-navy: #002B49;
+      --cd-blue: #0088CC;
+      --cd-light-blue: #E8F4FA;
+      --cd-red: #D9534F;
+      --cd-green: #28A745;
+      --bg-color: #F0F4F8;
+      --card-bg: #FFFFFF;
+      --text-dark: #222222;
+      --text-muted: #666666;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background: #FAFAFA;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      background-color: var(--cd-navy);
+      color: white;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .header-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title span {
+      background-color: var(--cd-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .btn-login {
+      background-color: var(--cd-blue);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover {
+      opacity: 0.9;
+    }
+
+    .btn-logout { background-color: #555; }
+
+    .content {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Karta Profilu */
+    .profile-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      border-left: 5px solid var(--cd-blue);
+      position: relative;
+    }
+
+    .profile-photo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .profile-photo {
+      width: 90px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #DDD;
+      background-color: #EEE;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .profile-photo-container .badge {
+      width: 100%;
+    }
+
+    .badge-offline { background-color: #E0E0E0; color: #555; }
+    .badge-online { background-color: #D4EDDA; color: #155724; }
+    .badge-ready { background-color: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+    .badge-pending { background-color: #FFF3CD; color: #856404; border: 1px solid #FFEEBA; }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+
+    .profile-info h2 {
+      font-size: 1.15rem;
+      color: var(--cd-navy);
+      line-height: 1.2;
+    }
+
+    .profile-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .profile-trains-section {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed #DDD;
+    }
+
+    .profile-trains-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: var(--cd-navy);
+      margin-bottom: 6px;
+    }
+
+    .train-badges-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .train-badge-chip {
+      background-color: var(--cd-light-blue);
+      color: var(--cd-navy);
+      border: 1px solid var(--cd-blue);
+      border-radius: 12px;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      color: var(--cd-navy);
+      margin-bottom: 12px;
+      border-bottom: 2px solid var(--cd-light-blue);
+      padding-bottom: 6px;
+    }
+
+    /* Kalendář Komponenta */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar-title {
+      font-weight: bold;
+      color: var(--cd-navy);
+      font-size: 0.95rem;
+    }
+
+    .calendar-btn {
+      background: var(--cd-light-blue);
+      color: var(--cd-navy);
+      border: 1px solid var(--cd-blue);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.85rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+
+    .calendar-day-header {
+      font-weight: bold;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 4px 0;
+    }
+
+    .calendar-day {
+      padding: 8px 2px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: #F8F9FA;
+      border: 1px solid #E9ECEF;
+      position: relative;
+      min-height: 42px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .calendar-day.empty {
+      background: transparent;
+      border: none;
+      cursor: default;
+    }
+
+    .calendar-day.today {
+      border: 2px solid var(--cd-blue);
+      font-weight: bold;
+    }
+
+    .calendar-day.selected {
+      background-color: var(--cd-navy);
+      color: white;
+    }
+
+    .calendar-day.has-rides::after {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      background-color: var(--cd-blue);
+      border-radius: 50%;
+      margin-top: 2px;
+    }
+
+    .calendar-day.selected.has-rides::after {
+      background-color: #FFF;
+    }
+
+    .filter-reset-btn {
+      margin-top: 10px;
+      background: none;
+      border: none;
+      color: var(--cd-blue);
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Formuláře */
+    .form-group {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      padding: 12px;
+      border: 1px solid #CCC;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      width: 100%;
+      background-color: #FFF;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--cd-blue);
+    }
+
+    .btn-action {
+      background-color: var(--cd-blue);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background-color: #0077B3;
+    }
+
+    .btn-profile-login {
+      margin-top: 8px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      border-radius: 6px;
+    }
+
+    .btn-ready {
+      background-color: var(--cd-green);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #F9F9F9;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #EAEAEA;
+      gap: 10px;
+    }
+
+    .item-actions { display: flex; gap: 6px; }
+
+    .btn-sm {
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-edit { background-color: #FFC107; color: #222; }
+    .btn-delete { background-color: var(--cd-red); color: white; }
+
+    /* Karty jízd */
+    .ride-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-color: var(--cd-light-blue);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #C0E2F5;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      position: relative;
+    }
+
+    .ride-item:active {
+      transform: scale(0.99);
+    }
+
+    .ride-item.is-ready {
+      background-color: #E8F8F0;
+      border-color: #B2E5C8;
+      border-left: 5px solid var(--cd-green);
+    }
+
+    .ride-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .ride-title {
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--text-dark);
+      flex: 1;
+    }
+
+    .btn-delete-ride {
+      background-color: var(--cd-red);
+      color: white;
+      border: none;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ride-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: var(--cd-navy);
+    }
+
+    .ride-time {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--cd-navy);
+    }
+
+    .ride-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(0,0,0,0.1);
+      gap: 8px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .modal {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .modal h3 {
+      margin-bottom: 14px;
+      color: var(--cd-navy);
+    }
+
+    .error-msg {
+      color: var(--cd-red);
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .hidden { display: none !important; }
+
+    .info-box {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 16px;
+      font-size: 0.9rem;
+    }
+
+    .modal-detail-row {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .modal-detail-row strong {
+      color: var(--cd-navy);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="header">
+      <div class="header-title">
+        <span>ČD</span> Zaměstnanci
+      </div>
+      <button id="authBtn" class="btn-login hidden" onclick="handleAuthClick()">Odhlásit</button>
+    </header>
+
+    <div class="content">
+
+      <!-- POHLED PRO NEPŘIHLÁŠENÉ: Adam a Kuba pod sebou -->
+      <div id="guestView" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="card info-box" style="margin-bottom:-4px;">
+           Pro přihlášení vybeřte svůj profil strojvůdce:
+        </div>
+
+        <!-- Karta Adam Pořízka -->
+        <div class="profile-card">
+          <div class="profile-photo-container">
+            <img 
+              class="profile-photo" 
+              src="https://cdn.phototourl.com/free/2026-09-21-5cb3d8e4-1299-4335-af3b-bbb5abce93a4.jpg" 
+              alt="Adam Pořízka" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80';"
+            />
+            <span class="badge badge-offline">Nepřihlášen</span>
+          </div>
+
+          <div class="profile-info">
+            <h2>Adam Pořízka</h2>
+            <p><strong>Narozen:</strong> 20.09.2013</p>
+            <p><strong>Pozice:</strong> Strojvůdce</p>
+            
+            <div class="profile-trains-section">
+              <div class="profile-trains-title">Moje vlaky / lokomotivy:</div>
+              <div id="adamGuestTrainBadges" class="train-badges-wrapper"></div>
+            </div>
+
+            <button class="btn-action btn-profile-login" onclick="openLoginFor('adam')">🔑 Přihlásit se jako Adam</button>
+          </div>
+        </div>
+
+        <!-- Karta Jakub Štěpánek -->
+        <div class="profile-card">
+          <div class="profile-photo-container">
+            <img 
+              class="profile-photo" 
+              src="https://cdn.imagetourls.com/uploads/tyImg/ImGlIV2C.jpg" 
+              alt="Jakub Štěpánek" 
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80';"
+            />
+            <span class="badge badge-offline">Nepřihlášen</span>
+          </div>
+
+          <div class="profile-info">
+            <h2>Jakub Štěpánek</h2>
+            <p><strong>Narozen:</strong> 09.10.2013</p>
+            <p><strong>Pozice:</strong> Strojvůdce</p>
+            
+            <div class="profile-trains-section">
+              <div class="profile-trains-title">Moje vlaky / lokomotivy:</div>
+              <div id="jakubGuestTrainBadges" class="train-badges-wrapper"></div>
+            </div>
+
+            <button class="btn-action btn-profile-login" onclick="openLoginFor('jakub')">🔑 Přihlásit se jako Jakub</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- POHLED PRO PŘIHLÁŠENÉHO UŽIVATELE -->
+      <div id="loggedInView" class="hidden" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Profilová karta přihlášeného -->
+        <div class="profile-card">
+          <div class="profile-photo-container">
+            <img 
+              id="profilePhoto"
+              class="profile-photo" 
+              src="" 
+              alt="Profilová fotka"
+            />
+            <span id="statusBadge" class="badge badge-online">Přihlášen</span>
+          </div>
+
+          <div class="profile-info">
+            <h2 id="profileName">-</h2>
+            <p id="profileDob"><strong>Narozen:</strong> -</p>
+            <p id="profilePosition"><strong>Pozice:</strong> Strojvůdce</p>
+            
+            <div class="profile-trains-section">
+              <div class="profile-trains-title">Moje vlaky / lokomotivy:</div>
+              <div id="profileTrainBadges" class="train-badges-wrapper"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1. Sekce Kalendář -->
+        <div class="card">
+          <h3>Kalendář jízd</h3>
+          <div class="calendar-header">
+            <button class="calendar-btn" onclick="changeMonth(-1)">◄</button>
+            <div id="calendarMonthTitle" class="calendar-title">Září 2026</div>
+            <button class="calendar-btn" onclick="changeMonth(1)">►</button>
+          </div>
+          <div class="calendar-grid">
+            <div class="calendar-day-header">Po</div>
+            <div class="calendar-day-header">Út</div>
+            <div class="calendar-day-header">St</div>
+            <div class="calendar-day-header">Čt</div>
+            <div class="calendar-day-header">Pá</div>
+            <div class="calendar-day-header">So</div>
+            <div class="calendar-day-header">Ne</div>
+          </div>
+          <div id="calendarDays" class="calendar-grid" style="margin-top: 4px;"></div>
+          <button id="resetFilterBtn" class="filter-reset-btn hidden" onclick="clearDateFilter()">
+            Zobrazit všechny jízdy
+          </button>
+        </div>
+
+        <!-- 2. Sekce Seznam Jízd (HNED POD KALENDÁŘEM) -->
+        <div class="card">
+          <h3 id="rideListTitle">Seznam jízd</h3>
+          <div id="rideList" class="item-list"></div>
+        </div>
+
+        <!-- 3. Sekce Naplánovat Jízdu -->
+        <div class="card">
+          <h3>Naplánovat novou jízdu</h3>
+          <div class="form-group">
+            <label for="rideCatSelect">Kategorie:</label>
+            <select id="rideCatSelect"></select>
+          </div>
+          <div class="form-group">
+            <label for="rideTrainSelect">Vlak / Lokomotiva:</label>
+            <select id="rideTrainSelect"></select>
+          </div>
+          <div class="form-group">
+            <label for="rideRoute">Trasa / Vlak:</label>
+            <input type="text" id="rideRoute" placeholder="Např. Ex 541 (Praha - Pardubice)" onkeydown="if(event.key==='Enter') addRide()">
+          </div>
+          <div class="form-group">
+            <label for="rideDateTime">Datum a čas výjezdu:</label>
+            <input type="datetime-local" id="rideDateTime">
+          </div>
+          <button class="btn-action" onclick="addRide()">+ Naplánovat jízdu</button>
+        </div>
+
+        <!-- 4. Sekce Správa Kategorií -->
+        <div class="card">
+          <h3>Správa kategorií</h3>
+          <div class="form-group">
+            <input type="text" id="catInput" placeholder="Název nové kategorie..." onkeydown="if(event.key==='Enter') addCategory()">
+            <button class="btn-action" onclick="addCategory()">+ Přidat kategorii</button>
+          </div>
+          <div id="categoryList" class="item-list"></div>
+        </div>
+
+        <!-- 5. Sekce Správa Vlaků / Lokomotiv -->
+        <div class="card">
+          <h3>Správa vlaků / lokomotiv</h3>
+          <div class="form-group">
+            <input type="text" id="trainInput" placeholder="Přidat vlak/lokomotivu (např. 362, RegioPanter)..." onkeydown="if(event.key==='Enter') addTrain()">
+            <button class="btn-action" onclick="addTrain()">+ Přidat vlak / lokomotivu</button>
+          </div>
+          <div id="trainList" class="item-list"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Přihlašovací okno -->
+  <div id="loginModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="loginModalTitle" style="color:var(--cd-navy); margin-bottom:12px;">Přihlášení strojvůdce</h3>
+      <div id="loginError" class="error-msg">Nesprávné heslo!</div>
+      <form onsubmit="submitLogin(event)">
+        <div class="form-group">
+          <label for="password">Heslo:</label>
+          <input type="password" id="password" placeholder="Zadejte heslo" required>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+          <button type="button" class="btn-action" style="background:#888;" onclick="toggleModal(false)">Zrušit</button>
+          <button type="submit" class="btn-action">Přihlásit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal detailu jízdy -->
+  <div id="rideModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="modalRideTitle">Detail jízdy</h3>
+      <div class="modal-detail-row">
+        <strong>Kategorie:</strong> <span id="modalRideCategory"></span>
+      </div>
+      <div class="modal-detail-row">
+        <strong>Vlak/Lokomotiva:</strong> <span id="modalRideTrain"></span>
+      </div>
+      <div class="modal-detail-row">
+        <strong>Čas výjezdu:</strong> <span id="modalRideTime"></span>
+      </div>
+      <div class="modal-detail-row">
+        <strong>Stav připravenosti:</strong> <br>
+        <span id="modalRideStatusBadge" class="badge" style="margin-top:4px;"></span>
+      </div>
+
+      <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+        <button id="modalReadyBtn" class="btn-ready" onclick="toggleRideReadyFromModal()">
+          ✓ Jsem v práci připraven
+        </button>
+        <button type="button" class="btn-action" style="background:#888;" onclick="toggleRideModal(false)">Zavřít</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const USERS = {
+      adam: {
+        id: 'adam',
+        name: 'Adam Pořízka',
+        pass: 'muzikus*22',
+        dob: '20.09.2013',
+        position: 'Strojvůdce',
+        photo: 'https://cdn.phototourl.com/free/2026-09-21-5cb3d8e4-1299-4335-af3b-bbb5abce93a4.jpg',
+        keyCats: 'cd_adam_cats_v4',
+        keyTrains: 'cd_adam_trains_v4',
+        keyRides: 'cd_adam_rides_v4',
+        fallbackCats: 'cd_employee_categories_v3',
+        fallbackTrains: 'cd_employee_trains_v3',
+        fallbackRides: 'cd_employee_rides_v3'
+      },
+      jakub: {
+        id: 'jakub',
+        name: 'Jakub Štěpánek',
+        pass: 'Jebeti',
+        dob: '09.10.2013',
+        position: 'Strojvůdce',
+        photo: 'https://cdn.imagetourls.com/uploads/tyImg/ImGlIV2C.jpg',
+        keyCats: 'cd_jakub_cats_v2',
+        keyTrains: 'cd_jakub_trains_v2',
+        keyRides: 'cd_jakub_rides_v2',
+        fallbackCats: null,
+        fallbackTrains: null,
+        fallbackRides: null
+      }
+    };
+
+    const KEY_ACTIVE_USER = 'cd_active_user_id_v2';
+
+    let activeUser = null;
+    let targetLoginUser = null;
+    let categories = [];
+    let trains = [];
+    let rides = [];
+
+    // Kalendář stav
+    let currentDate = new Date();
+    let selectedDateStr = null;
+    let activeRideId = null;
+
+    function loadActiveUser() {
+      const activeId = localStorage.getItem(KEY_ACTIVE_USER);
+      if (activeId && USERS[activeId]) {
+        activeUser = USERS[activeId];
+        loadUserData(activeUser);
+      } else {
+        activeUser = null;
+      }
+    }
+
+    function loadUserData(user) {
+      let savedCats = localStorage.getItem(user.keyCats);
+      if (!savedCats && user.fallbackCats) savedCats = localStorage.getItem(user.fallbackCats);
+      categories = savedCats ? JSON.parse(savedCats) : ["Osobní vlaky", "Rychlíky / Expresy"];
+
+      let savedTrains = localStorage.getItem(user.keyTrains);
+      if (!savedTrains && user.fallbackTrains) savedTrains = localStorage.getItem(user.fallbackTrains);
+      trains = savedTrains ? JSON.parse(savedTrains) : ["Lokomotiva 362 (Eso)", "RegioPanter 640", "Siemens Vectron 193"];
+
+      let savedRides = localStorage.getItem(user.keyRides);
+      if (!savedRides && user.fallbackRides) savedRides = localStorage.getItem(user.fallbackRides);
+      rides = savedRides ? JSON.parse(savedRides) : [];
+    }
+
+    function saveCategories() {
+      if (activeUser) localStorage.setItem(activeUser.keyCats, JSON.stringify(categories));
+    }
+    function saveTrains() {
+      if (activeUser) localStorage.setItem(activeUser.keyTrains, JSON.stringify(trains));
+    }
+    function saveRides() {
+      if (activeUser) localStorage.setItem(activeUser.keyRides, JSON.stringify(rides));
+    }
+
+    function handleAuthClick() {
+      if (activeUser) {
+        activeUser = null;
+        localStorage.removeItem(KEY_ACTIVE_USER);
+        updateUI();
+      }
+    }
+
+    function openLoginFor(userId) {
+      if (!USERS[userId]) return;
+      targetLoginUser = USERS[userId];
+      document.getElementById('loginModalTitle').textContent = `Přihlášení - ${targetLoginUser.name}`;
+      toggleModal(true);
+    }
+
+    function toggleModal(show) {
+      const modal = document.getElementById('loginModal');
+      document.getElementById('loginError').style.display = 'none';
+      if (show) {
+        modal.classList.remove('hidden');
+        document.getElementById('password').value = "";
+        document.getElementById('password').focus();
+      } else {
+        modal.classList.add('hidden');
+        targetLoginUser = null;
+      }
+    }
+
+    function submitLogin(e) {
+      e.preventDefault();
+      if (!targetLoginUser) return;
+
+      const passVal = document.getElementById('password').value.trim();
+
+      if (passVal === targetLoginUser.pass) {
+        activeUser = targetLoginUser;
+        localStorage.setItem(KEY_ACTIVE_USER, activeUser.id);
+        loadUserData(activeUser);
+        toggleModal(false);
+        updateUI();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    }
+
+    function updateUI() {
+      const authBtn = document.getElementById('authBtn');
+      const guestView = document.getElementById('guestView');
+      const loggedInView = document.getElementById('loggedInView');
+
+      if (activeUser) {
+        authBtn.classList.remove('hidden');
+        guestView.classList.add('hidden');
+        loggedInView.classList.remove('hidden');
+
+        document.getElementById('profilePhoto').src = activeUser.photo;
+        document.getElementById('profileName').textContent = activeUser.name;
+        document.getElementById('profileDob').innerHTML = `<strong>Narozen:</strong> ${activeUser.dob}`;
+        document.getElementById('profilePosition').innerHTML = `<strong>Pozice:</strong> ${activeUser.position}`;
+
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('rideDateTime').value = now.toISOString().slice(0, 16);
+
+        renderProfileTrains();
+        renderCategories();
+        renderTrains();
+        renderCalendar();
+        renderRides();
+      } else {
+        authBtn.classList.add('hidden');
+        guestView.classList.remove('hidden');
+        loggedInView.classList.add('hidden');
+
+        renderGuestProfileTrains();
+      }
+    }
+
+    /* --- VLAKY V PROFILU PRO NEPŘIHLÁŠENÉ --- */
+    function renderGuestProfileTrains() {
+      ['adam', 'jakub'].forEach(userId => {
+        const u = USERS[userId];
+        const container = document.getElementById(`${userId}GuestTrainBadges`);
+        if (!container) return;
+        container.innerHTML = "";
+
+        let uTrains = [];
+        try {
+          const saved = localStorage.getItem(u.keyTrains) || (u.fallbackTrains ? localStorage.getItem(u.fallbackTrains) : null);
+          uTrains = saved ? JSON.parse(saved) : ["Lokomotiva 362 (Eso)", "RegioPanter 640", "Siemens Vectron 193"];
+        } catch(e) {
+          uTrains = ["Lokomotiva 362 (Eso)", "RegioPanter 640", "Siemens Vectron 193"];
+        }
+
+        uTrains.forEach(t => {
+          const chip = document.createElement('span');
+          chip.className = 'train-badge-chip';
+          chip.textContent = t;
+          container.appendChild(chip);
+        });
+      });
+    }
+
+    /* --- VLAKY V PROFILU PŘIHLÁŠENÉHO --- */
+    function renderProfileTrains() {
+      const profileContainer = document.getElementById('profileTrainBadges');
+      if (!profileContainer) return;
+      profileContainer.innerHTML = "";
+
+      if (!trains || trains.length === 0) {
+        profileContainer.innerHTML = "<span style='color:#888; font-size:0.75rem;'>Žádné přidané vlaky</span>";
+        return;
+      }
+
+      trains.forEach(train => {
+        const chip = document.createElement('span');
+        chip.className = 'train-badge-chip';
+        chip.textContent = train;
+        profileContainer.appendChild(chip);
+      });
+    }
+
+    /* --- KALENDÁŘ --- */
+    function renderCalendar() {
+      const monthTitle = document.getElementById('calendarMonthTitle');
+      const daysContainer = document.getElementById('calendarDays');
+      if (!monthTitle || !daysContainer) return;
+      daysContainer.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const monthNames = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
+      monthTitle.textContent = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      let startingDay = firstDay.getDay() - 1;
+      if (startingDay === -1) startingDay = 6;
+
+      const totalDays = lastDay.getDate();
+
+      for (let i = 0; i < startingDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-day empty';
+        daysContainer.appendChild(emptyCell);
+      }
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.textContent = day;
+
+        if (dateStr === todayStr) {
+          dayCell.classList.add('today');
+        }
+
+        if (dateStr === selectedDateStr) {
+          dayCell.classList.add('selected');
+        }
+
+        const hasRides = rides.some(r => r.dateTime && r.dateTime.startsWith(dateStr));
+        if (hasRides) {
+          dayCell.classList.add('has-rides');
+        }
+
+        dayCell.onclick = () => selectCalendarDate(dateStr);
+        daysContainer.appendChild(dayCell);
+      }
+
+      const resetBtn = document.getElementById('resetFilterBtn');
+      if (selectedDateStr) {
+        resetBtn.classList.remove('hidden');
+      } else {
+        resetBtn.classList.add('hidden');
+      }
+    }
+
+    function changeMonth(delta) {
+      currentDate.setMonth(currentDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function selectCalendarDate(dateStr) {
+      if (selectedDateStr === dateStr) {
+        selectedDateStr = null;
+      } else {
+        selectedDateStr = dateStr;
+      }
+      renderCalendar();
+      renderRides();
+    }
+
+    function clearDateFilter() {
+      selectedDateStr = null;
+      renderCalendar();
+      renderRides();
+    }
+
+    /* --- SPRÁVA KATEGORIÍ --- */
+    function renderCategories() {
+      const listEl = document.getElementById('categoryList');
+      const selectEl = document.getElementById('rideCatSelect');
+      if (!listEl || !selectEl) return;
+      listEl.innerHTML = "";
+      selectEl.innerHTML = "";
+
+      categories.forEach((cat, index) => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <span>${cat}</span>
+          <div class="item-actions">
+            <button class="btn-sm btn-edit" onclick="renameCategory(${index})">Upravit</button>
+            <button class="btn-sm btn-delete" onclick="deleteCategory(${index})">Smazat</button>
+          </div>
+        `;
+        listEl.appendChild(item);
+
+        const option = document.createElement('option');
+        option.value = cat; option.textContent = cat;
+        selectEl.appendChild(option);
+      });
+    }
+
+    function addCategory() {
+      const input = document.getElementById('catInput');
+      if (input && input.value.trim()) {
+        categories.push(input.value.trim());
+        input.value = "";
+        saveCategories(); 
+        renderCategories();
+      }
+    }
+
+    function renameCategory(index) {
+      const newName = prompt("Nový název kategorie:", categories[index]);
+      if (newName && newName.trim()) {
+        const oldName = categories[index];
+        categories[index] = newName.trim();
+        
+        rides.forEach(ride => {
+          if (ride.category === oldName) {
+            ride.category = newName.trim();
+          }
+        });
+
+        saveCategories(); 
+        saveRides();
+        renderCategories();
+        renderRides();
+      }
+    }
+
+    function deleteCategory(index) {
+      if (confirm("Smazat kategorii?")) {
+        categories.splice(index, 1);
+        saveCategories(); 
+        renderCategories();
+      }
+    }
+
+    /* --- SPRÁVA VLAKŮ --- */
+    function renderTrains() {
+      const listEl = document.getElementById('trainList');
+      const selectEl = document.getElementById('rideTrainSelect');
+      if (listEl) listEl.innerHTML = "";
+      if (selectEl) selectEl.innerHTML = "";
+
+      trains.forEach((train, index) => {
+        if (listEl) {
+          const item = document.createElement('div');
+          item.className = 'list-item';
+          item.innerHTML = `
+            <span>${train}</span>
+            <div class="item-actions">
+              <button class="btn-sm btn-edit" onclick="renameTrain(${index})">Upravit</button>
+              <button class="btn-sm btn-delete" onclick="deleteTrain(${index})">Smazat</button>
+            </div>
+          `;
+          listEl.appendChild(item);
+        }
+
+        if (selectEl) {
+          const option = document.createElement('option');
+          option.value = train; option.textContent = train;
+          selectEl.appendChild(option);
+        }
+      });
+
+      renderProfileTrains();
+    }
+
+    function addTrain() {
+      const input = document.getElementById('trainInput');
+      if (input && input.value.trim()) {
+        trains.push(input.value.trim());
+        input.value = "";
+        saveTrains();
+        renderTrains();
+      }
+    }
+
+    function renameTrain(index) {
+      const newName = prompt("Nový název vlaku/lokomotivy:", trains[index]);
+      if (newName && newName.trim()) {
+        const oldName = trains[index];
+        trains[index] = newName.trim();
+
+        rides.forEach(ride => {
+          if (ride.train === oldName) {
+            ride.train = newName.trim();
+          }
+        });
+
+        saveTrains(); 
+        saveRides();
+        renderTrains();
+        renderRides();
+      }
+    }
+
+    function deleteTrain(index) {
+      if (confirm("Smazat tento vlak?")) {
+        trains.splice(index, 1);
+        saveTrains(); 
+        renderTrains();
+      }
+    }
+
+    /* --- JÍZDY & PŘIPRAVENOST --- */
+    function formatDateTime(dateTimeStr) {
+      if (!dateTimeStr) return "Nespecifikováno";
+      const d = new Date(dateTimeStr);
+      if (isNaN(d.getTime())) return dateTimeStr;
+      return d.toLocaleDateString('cs-CZ') + ' v ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderRides() {
+      const listEl = document.getElementById('rideList');
+      const titleEl = document.getElementById('rideListTitle');
+      if (!listEl) return;
+      listEl.innerHTML = "";
+
+      let filteredRides = rides;
+      if (selectedDateStr) {
+        const [y, m, d] = selectedDateStr.split('-');
+        titleEl.textContent = `Jízdy pro ${d}.${m}.${y}`;
+        filteredRides = rides.filter(r => r.dateTime && r.dateTime.startsWith(selectedDateStr));
+      } else {
+        titleEl.textContent = "Seznam jízd";
+      }
+
+      if (filteredRides.length === 0) {
+        listEl.innerHTML = selectedDateStr 
+          ? "<p style='font-size:0.85rem; color:#888;'>Pro tento den nebyly nalezeny žádné jízdy.</p>"
+          : "<p style='font-size:0.85rem; color:#888;'>Zatím žádné zaznamenané jízdy.</p>";
+        return;
+      }
+
+      filteredRides.sort((a, b) => new Date(a.dateTime || 0) - new Date(b.dateTime || 0));
+
+      filteredRides.forEach((ride) => {
+        const item = document.createElement('div');
+        item.className = `ride-item ${ride.isReady ? 'is-ready' : ''}`;
+        
+        const readyBadge = ride.isReady 
+          ? `<span class="badge badge-ready">✓ Připraven v práci (${ride.readyTime || ''})</span>`
+          : `<span class="badge badge-pending">Čeká na přípravu</span>`;
+
+        item.innerHTML = `
+          <div class="ride-header">
+            <div class="ride-title">${ride.route}</div>
+            <button class="btn-delete-ride" onclick="deleteRide(event, ${ride.id})" title="Smazat jízdu">✕</button>
+          </div>
+          <div class="ride-details">
+            <div>Kategorie: <strong>${ride.category}</strong></div>
+            <div>Vlak: <strong>${ride.train || 'Nespecifikováno'}</strong></div>
+            <div class="ride-time">📅 ${formatDateTime(ride.dateTime)}</div>
+          </div>
+          <div class="ride-status-row">
+            ${readyBadge}
+            <button class="btn-sm btn-action" style="margin:0; width:auto; padding: 4px 8px; font-size: 0.75rem;" onclick="openRideModal(event, ${ride.id})">
+              Detail / Změnit stav
+            </button>
+          </div>
+        `;
+
+        item.onclick = (e) => {
+          if (!e.target.classList.contains('btn-delete-ride') && !e.target.classList.contains('btn-action')) {
+            openRideModal(e, ride.id);
+          }
+        };
+
+        listEl.appendChild(item);
+      });
+    }
+
+    function addRide() {
+      const catSelect = document.getElementById('rideCatSelect');
+      const trainSelect = document.getElementById('rideTrainSelect');
+      const routeInput = document.getElementById('rideRoute');
+      const dateTimeInput = document.getElementById('rideDateTime');
+
+      if (!catSelect.value) { alert("Nejprve vytvořte kategorii!"); return; }
+      if (!routeInput.value.trim()) { alert("Vyplňte trasu nebo název jízdy!"); return; }
+      if (!dateTimeInput.value) { alert("Vyberte datum a čas výjezdu!"); return; }
+
+      const newRide = {
+        id: Date.now(),
+        category: catSelect.value,
+        train: trainSelect ? trainSelect.value : "Nespecifikováno",
+        route: routeInput.value.trim(),
+        dateTime: dateTimeInput.value,
+        isReady: false,
+        readyTime: null
+      };
+
+      rides.unshift(newRide);
+      saveRides();
+      routeInput.value = "";
+      renderCalendar();
+      renderRides();
+    }
+
+    function deleteRide(e, rideId) {
+      if (e) e.stopPropagation();
+      if (confirm("Smazat jízdu?")) {
+        rides = rides.filter(r => r.id !== rideId);
+        saveRides(); 
+        renderCalendar();
+        renderRides();
+      }
+    }
+
+    /* --- MODAL DETAILU JÍZDY & PŘIPRAVENOST --- */
+    function openRideModal(e, rideId) {
+      if (e) e.stopPropagation();
+      const ride = rides.find(r => r.id === rideId);
+      if (!ride) return;
+
+      activeRideId = rideId;
+      document.getElementById('modalRideTitle').textContent = ride.route;
+      document.getElementById('modalRideCategory').textContent = ride.category;
+      document.getElementById('modalRideTrain').textContent = ride.train || 'Nespecifikováno';
+      document.getElementById('modalRideTime').textContent = formatDateTime(ride.dateTime);
+
+      updateModalStatusUI(ride);
+      toggleRideModal(true);
+    }
+
+    function updateModalStatusUI(ride) {
+      const badge = document.getElementById('modalRideStatusBadge');
+      const readyBtn = document.getElementById('modalReadyBtn');
+
+      if (ride.isReady) {
+        badge.textContent = `✓ Připraven v práci (potvrzeno v ${ride.readyTime || ''})`;
+        badge.className = "badge badge-ready";
+        readyBtn.textContent = "✕ Zrušit potvrzení přípravy";
+        readyBtn.style.backgroundColor = "var(--cd-red)";
+      } else {
+        badge.textContent = "Nepřipraven";
+        badge.className = "badge badge-pending";
+        readyBtn.textContent = "✓ Jsem v práci připraven";
+        readyBtn.style.backgroundColor = "var(--cd-green)";
+      }
+    }
+
+    function toggleRideReadyFromModal() {
+      if (!activeRideId) return;
+      const ride = rides.find(r => r.id === activeRideId);
+      if (!ride) return;
+
+      ride.isReady = !ride.isReady;
+      if (ride.isReady) {
+        const now = new Date();
+        ride.readyTime = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        ride.readyTime = null;
+      }
+
+      saveRides();
+      updateModalStatusUI(ride);
+      renderRides();
+    }
+
+    function toggleRideModal(show) {
+      const modal = document.getElementById('rideModal');
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+        activeRideId = null;
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadActiveUser();
+      updateUI();
+    });
+  </script>
+</body>
+</html>
